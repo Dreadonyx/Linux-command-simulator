@@ -1,0 +1,274 @@
+/* ========================================
+   LINUX COMMAND SIMULATOR - HACKER THEME
+   ======================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #0a0a0a;
+    color: #00ff00;
+    font-family: 'Courier New', 'Consolas', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Scanline effect overlay */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(0deg,
+            rgba(0, 0, 0, 0.15),
+            rgba(0, 0, 0, 0.15) 1px,
+            transparent 1px,
+            transparent 2px);
+    pointer-events: none;
+    z-index: 1000;
+}
+
+/* CRT glow effect */
+body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
+    pointer-events: none;
+    z-index: 999;
+}
+
+/* Terminal header */
+.terminal-header {
+    background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
+    border-bottom: 1px solid #00ff00;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.terminal-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.terminal-btn {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: none;
+}
+
+.terminal-btn.close {
+    background: #ff5f57;
+    box-shadow: 0 0 5px #ff5f57;
+}
+
+.terminal-btn.minimize {
+    background: #ffbd2e;
+    box-shadow: 0 0 5px #ffbd2e;
+}
+
+.terminal-btn.maximize {
+    background: #28c840;
+    box-shadow: 0 0 5px #28c840;
+}
+
+.terminal-title {
+    color: #00ff00;
+    font-size: 14px;
+    text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
+    letter-spacing: 2px;
+    flex-grow: 1;
+    text-align: center;
+}
+
+/* Main terminal container */
+.terminal {
+    padding: 20px;
+    min-height: calc(100vh - 50px);
+    background:
+        linear-gradient(90deg, rgba(0, 255, 0, 0.03) 1px, transparent 1px),
+        linear-gradient(rgba(0, 255, 0, 0.03) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+/* ASCII art banner */
+.banner {
+    color: #00ff00;
+    font-size: 10px;
+    line-height: 1.2;
+    margin-bottom: 20px;
+    text-shadow: 0 0 5px #00ff00;
+    white-space: pre;
+    overflow-x: auto;
+}
+
+.welcome-msg {
+    color: #00ccff;
+    margin-bottom: 15px;
+    padding: 10px;
+    border-left: 3px solid #00ccff;
+    background: rgba(0, 204, 255, 0.1);
+    text-shadow: 0 0 5px #00ccff;
+}
+
+/* Output area */
+#output {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.line {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 2px;
+}
+
+/* Command prompt */
+.prompt {
+    color: #ff0080;
+    text-shadow: 0 0 5px #ff0080, 0 0 8px rgba(255, 0, 128, 0.6);
+    font-weight: bold;
+}
+
+.prompt::before {
+    content: "┌──[";
+    color: #888;
+}
+
+.prompt::after {
+    content: "]";
+    color: #888;
+}
+
+/* User input command */
+.command {
+    color: #ffffff;
+    caret-color: transparent;
+    /* Hide browser's native caret */
+    text-shadow: 0 0 2px #ffffff;
+    min-width: 1px;
+}
+
+.command:focus {
+    outline: none;
+    caret-color: transparent;
+    /* Ensure caret stays hidden when focused */
+}
+
+/* Blinking cursor effect - only on active input */
+.command[contenteditable="true"]::after {
+    content: "█";
+    animation: blink 1s step-end infinite;
+    color: #00ff00;
+}
+
+@keyframes blink {
+
+    0%,
+    50% {
+        opacity: 1;
+    }
+
+    51%,
+    100% {
+        opacity: 0;
+    }
+}
+
+/* Command output */
+.output {
+    color: #00ff00;
+    margin: 5px 0 10px 25px;
+    padding-left: 15px;
+    border-left: 2px solid #003300;
+    white-space: pre-wrap;
+    text-shadow: 0 0 3px #00ff00;
+}
+
+/* Error messages */
+.output.error {
+    color: #ff4444;
+    border-left-color: #440000;
+    text-shadow: 0 0 3px #ff4444;
+}
+
+/* Status bar */
+.status-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(180deg, #0f0f1a 0%, #1a1a2e 100%);
+    border-top: 1px solid #00ff00;
+    padding: 5px 15px;
+    font-size: 11px;
+    display: flex;
+    justify-content: space-between;
+    color: #00ff00;
+    text-shadow: 0 0 5px #00ff00;
+    z-index: 100;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #00ff00;
+    border-radius: 4px;
+    box-shadow: 0 0 5px #00ff00;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #00cc00;
+}
+
+/* Selection highlight */
+::selection {
+    background: #00ff00;
+    color: #0a0a0a;
+}
+
+/* Flicker animation for authenticity */
+@keyframes flicker {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    92% {
+        opacity: 1;
+    }
+
+    93% {
+        opacity: 0.8;
+    }
+
+    94% {
+        opacity: 1;
+    }
+}
+
+.terminal {
+    animation: flicker 5s infinite;
+}
