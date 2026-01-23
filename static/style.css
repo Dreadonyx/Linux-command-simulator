@@ -98,6 +98,7 @@ body::after {
 /* Main terminal container */
 .terminal {
     padding: 20px;
+    padding-bottom: 50px;
     min-height: calc(100vh - 50px);
     background:
         linear-gradient(90deg, rgba(0, 255, 0, 0.03) 1px, transparent 1px),
