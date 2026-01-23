@@ -133,7 +133,7 @@ body::after {
 
 .line {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     margin-bottom: 2px;
 }
 
@@ -160,13 +160,20 @@ body::after {
     caret-color: transparent;
     /* Hide browser's native caret */
     text-shadow: 0 0 2px #ffffff;
-    min-width: 1px;
+    min-width: 8px;
+    display: inline-block;
 }
 
 .command:focus {
     outline: none;
     caret-color: transparent;
     /* Ensure caret stays hidden when focused */
+}
+
+/* Ensure cursor stays on line when input is empty */
+.command:empty {
+    min-width: 8px;
+    display: inline-block;
 }
 
 /* Blinking cursor effect - only on active input */
@@ -248,27 +255,135 @@ body::after {
     color: #0a0a0a;
 }
 
-/* Flicker animation for authenticity */
-@keyframes flicker {
+/* Terminal - no animation for clean look */
 
-    0%,
-    100% {
-        opacity: 1;
-    }
+/* ========================================
+   NANO EDITOR STYLES
+   ======================================== */
 
-    92% {
-        opacity: 1;
-    }
-
-    93% {
-        opacity: 0.8;
-    }
-
-    94% {
-        opacity: 1;
-    }
+.nano-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #0a0a0a;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
 }
 
-.terminal {
-    animation: flicker 5s infinite;
+.nano-editor {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    font-family: 'Courier New', 'Consolas', monospace;
+}
+
+.nano-header {
+    background: #1a1a2e;
+    padding: 5px 10px;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #333;
+    color: #ffffff;
+}
+
+.nano-title {
+    color: #ffffff;
+}
+
+.nano-filename {
+    color: #00ff00;
+    text-shadow: 0 0 5px #00ff00;
+}
+
+.nano-modified {
+    color: #ffcc00;
+    text-shadow: 0 0 5px #ffcc00;
+}
+
+.nano-content {
+    flex: 1;
+    background: #0a0a0a;
+    color: #00ff00;
+    border: none;
+    padding: 10px;
+    font-family: 'Courier New', 'Consolas', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    resize: none;
+    outline: none;
+    caret-color: #00ff00;
+    text-shadow: 0 0 2px #00ff00;
+}
+
+.nano-content::selection {
+    background: #00ff00;
+    color: #0a0a0a;
+}
+
+.nano-footer {
+    background: #1a1a2e;
+    padding: 5px 10px;
+    border-top: 1px solid #333;
+}
+
+.nano-shortcuts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    font-size: 12px;
+    color: #cccccc;
+    margin-bottom: 3px;
+}
+
+.nano-shortcuts span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.nano-key {
+    background: #333;
+    color: #ffffff;
+    padding: 1px 4px;
+    border-radius: 2px;
+    font-weight: bold;
+}
+
+.nano-status {
+    background: #1a1a2e;
+    color: #ffffff;
+    padding: 5px 10px;
+    text-align: center;
+    min-height: 24px;
+    border-top: 1px solid #333;
+}
+
+/* Nano save prompt */
+.nano-save-prompt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 0;
+    color: #ffffff;
+}
+
+.nano-save-prompt input {
+    flex: 1;
+    background: #0a0a0a;
+    border: none;
+    border-bottom: 1px solid #00ff00;
+    color: #00ff00;
+    font-family: 'Courier New', 'Consolas', monospace;
+    font-size: 14px;
+    padding: 3px 5px;
+    outline: none;
+    text-shadow: 0 0 2px #00ff00;
+}
+
+.nano-save-prompt input:focus {
+    border-bottom-color: #00ff00;
+    box-shadow: 0 1px 0 #00ff00;
 }
