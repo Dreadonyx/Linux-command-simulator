@@ -309,14 +309,20 @@ def execute(command):
         elif cmd == "which":
             if not args:
                 return ""
-            known = ["pwd", "ls", "cd", "mkdir", "touch", "rm", "cat", "echo", "whoami", 
+            known = ["pwd", "ls", "cd", "mkdir", "touch", "rm", "cat", "echo", "whoami",
                      "date", "uname", "clear", "help", "hostname", "id", "uptime", "ps",
                      "kill", "df", "free", "history", "head", "tail", "wc", "find", "grep",
                      "cp", "mv", "man", "which", "exit", "neofetch", "cowsay", "cal",
                      "nano", "strings", "xxd", "base64", "file", "sort", "uniq", "cut",
                      "tr", "rev", "tac", "diff", "chmod", "chown", "env", "export", "alias",
                      "seq", "sleep", "tee", "stat", "ln", "readlink", "dirname", "basename",
-                     "md5sum", "sha256sum", "yes", "true", "false", "type"]
+                     "md5sum", "sha256sum", "yes", "true", "false", "type",
+                     "ping", "curl", "wget", "ssh", "top", "htop", "du", "tar", "zip",
+                     "unzip", "awk", "sed", "printf", "sudo", "su", "who", "w", "last",
+                     "lscpu", "lsblk", "netstat", "ss", "ifconfig", "ip", "systemctl",
+                     "apt", "apt-get", "git", "vim", "vi", "less", "more", "python3",
+                     "python", "crontab", "nslookup", "dig", "lsof", "jobs", "bg", "fg",
+                     "traceroute"]
             if args[0] in known:
                 return f"/usr/bin/{args[0]}"
             return ""
@@ -791,16 +797,597 @@ Change: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}.000000000 +0000
                 return f"{cmd_name} is a shell builtin"
             if cmd_name in aliases:
                 return f"{cmd_name} is aliased to `{aliases[cmd_name]}'"
-            known = ["pwd", "ls", "mkdir", "touch", "rm", "cat", "whoami", "date", "uname", 
+            known = ["pwd", "ls", "mkdir", "touch", "rm", "cat", "whoami", "date", "uname",
                      "clear", "help", "hostname", "id", "uptime", "ps", "kill", "df", "free",
                      "head", "tail", "wc", "find", "grep", "cp", "mv", "man", "which",
                      "neofetch", "cowsay", "cal", "nano", "strings", "xxd", "base64", "file",
                      "sort", "uniq", "cut", "tr", "rev", "tac", "diff", "chmod", "chown",
                      "env", "seq", "sleep", "tee", "stat", "ln", "readlink", "dirname",
-                     "basename", "md5sum", "sha256sum", "yes", "true", "false"]
+                     "basename", "md5sum", "sha256sum", "yes", "true", "false",
+                     "ping", "curl", "wget", "ssh", "top", "htop", "du", "tar", "zip",
+                     "unzip", "awk", "sed", "printf", "sudo", "su", "who", "w", "last",
+                     "lscpu", "lsblk", "netstat", "ss", "ifconfig", "ip", "systemctl",
+                     "apt", "apt-get", "git", "vim", "vi", "less", "more", "python3",
+                     "python", "crontab", "nslookup", "dig", "lsof", "jobs", "bg", "fg",
+                     "traceroute"]
             if cmd_name in known:
                 return f"{cmd_name} is /usr/bin/{cmd_name}"
             return f"bash: type: {cmd_name}: not found"
+
+        elif cmd == "ping":
+            if not args:
+                return "ping: missing host operand\nUsage: ping HOST"
+            host = [a for a in args if not a.startswith("-")]
+            if not host:
+                return "ping: missing host operand"
+            host = host[0]
+            count = 4
+            for a in args:
+                if a.startswith("-c") and len(a) > 2:
+                    try: count = int(a[2:])
+                    except: pass
+            if "-c" in args:
+                idx = args.index("-c")
+                if idx + 1 < len(args):
+                    try: count = int(args[idx + 1])
+                    except: pass
+            lines = [f"PING {host} ({random.randint(1,254)}.{random.randint(1,254)}.{random.randint(1,254)}.{random.randint(1,254)}): 56 data bytes"]
+            for i in range(1, count + 1):
+                ms = round(random.uniform(5, 80), 3)
+                lines.append(f"64 bytes from {host}: icmp_seq={i} ttl=64 time={ms} ms")
+            avg = round(random.uniform(5, 80), 3)
+            lines.append(f"\n--- {host} ping statistics ---")
+            lines.append(f"{count} packets transmitted, {count} received, 0% packet loss")
+            lines.append(f"rtt min/avg/max/mdev = {avg-2}/{avg}/{avg+5}/1.234 ms")
+            return "\n".join(lines)
+
+        elif cmd == "curl":
+            if not args:
+                return "curl: try 'curl --help' for more information"
+            flags = [a for a in args if a.startswith("-")]
+            urls = [a for a in args if not a.startswith("-")]
+            if not urls:
+                return "curl: no URL specified"
+            url = urls[0]
+            if "-I" in flags or "--head" in flags:
+                return f"HTTP/1.1 200 OK\nContent-Type: text/html; charset=utf-8\nServer: nginx/1.18.0\nDate: {datetime.now().strftime('%a, %d %b %Y %H:%M:%S GMT')}\nContent-Length: 1234"
+            if "-o" in flags:
+                idx = args.index("-o")
+                if idx + 1 < len(args):
+                    outfile = args[idx + 1]
+                    node = navigate_to(current_path)
+                    node[outfile] = f"[Downloaded content from {url}]"
+                    return f"  % Total    % Received % Xferd  Average Speed\n100  1234  100  1234    0     0   5432      0  0:00:01\nSaved to: '{outfile}'"
+            return f"[Simulated response from {url}]\n<!DOCTYPE html><html><body><h1>Hello from {url}</h1></body></html>"
+
+        elif cmd == "wget":
+            if not args:
+                return "wget: missing URL\nUsage: wget [options] URL"
+            url = [a for a in args if not a.startswith("-")]
+            if not url:
+                return "wget: missing URL"
+            url = url[0]
+            filename = url.split("/")[-1] or "index.html"
+            node = navigate_to(current_path)
+            node[filename] = f"[Downloaded content from {url}]"
+            size = random.randint(1000, 99999)
+            return f"--{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}--  {url}\nResolving {url.split('/')[2] if '/' in url else url}...\nConnecting... connected.\nHTTP request sent, awaiting response... 200 OK\nLength: {size} ({size//1024}K)\nSaving to: '{filename}'\n\n{filename}   100%[===================>]   {size//1024}K  --.-KB/s    in 0.1s\n\n'{filename}' saved [{size}/{size}]"
+
+        elif cmd == "ssh":
+            if not args:
+                return "usage: ssh [-p port] [user@]hostname [command]"
+            host = [a for a in args if not a.startswith("-")]
+            if not host:
+                return "ssh: missing hostname"
+            host = host[0]
+            return f"ssh: connect to host {host} port 22: Connection refused\n(This is a simulator — no real connections are made)"
+
+        elif cmd in ("top", "htop"):
+            lines = [
+                f"top - {datetime.now().strftime('%H:%M:%S')} up {random.randint(1,99)}:{random.randint(0,59):02d},  1 user,  load average: {round(random.uniform(0,2),2)}, {round(random.uniform(0,2),2)}, {round(random.uniform(0,2),2)}",
+                "Tasks:  87 total,   1 running,  86 sleeping,   0 stopped,   0 zombie",
+                "%Cpu(s):  2.3 us,  0.7 sy,  0.0 ni, 96.5 id,  0.4 wa,  0.0 hi,  0.1 si",
+                "MiB Mem :   8000.0 total,   4096.0 free,   2048.0 used,   1856.0 buff/cache",
+                "MiB Swap:   2048.0 total,   2048.0 free,      0.0 used.   5632.0 avail Mem",
+                "",
+                "  PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND",
+            ]
+            for p in processes:
+                cpu = round(random.uniform(0, 5), 1)
+                mem = round(random.uniform(0.1, 2.0), 1)
+                lines.append(f"{p['pid']:5} {p['user']:8}  20   0   12345   1234    456 S  {cpu:4.1f}  {mem:4.1f}   0:00.01 {p['name']}")
+            return "\n".join(lines)
+
+        elif cmd == "du":
+            node = navigate_to(current_path)
+            if args and not args[0].startswith("-"):
+                target = args[0]
+                if target not in node:
+                    return f"du: cannot access '{target}': No such file or directory"
+                content = node[target]
+                size = 4 if isinstance(content, dict) else max(1, len(content) // 1024 + 1)
+                return f"{size}\t{target}"
+            # Show all items in current dir
+            lines = []
+            total = 0
+            for name, val in node.items():
+                size = 4 if isinstance(val, dict) else max(1, len(val) // 1024 + 1)
+                total += size
+                lines.append(f"{size}\t./{name}")
+            lines.append(f"{total}\t.")
+            return "\n".join(lines)
+
+        elif cmd == "tar":
+            if not args:
+                return "tar: You must specify one of the '-Acdtrux', '--delete' or '--test-label' options"
+            flags = args[0] if args else ""
+            if "c" in flags:
+                # Create archive
+                files = [a for a in args[1:] if not a.startswith("-") and not a.endswith(".tar") and not a.endswith(".gz")]
+                archive = next((a for a in args[1:] if a.endswith(".tar") or a.endswith(".gz") or a.endswith(".tar.gz")), None)
+                if "-f" in flags or "f" in flags:
+                    archive_name = next((a for a in args if a.endswith(".tar") or a.endswith(".gz")), None)
+                    if archive_name:
+                        node = navigate_to(current_path)
+                        node[archive_name] = f"[tar archive containing: {', '.join(files)}]"
+                        return ""
+                return "tar: specify archive name with -f"
+            elif "x" in flags:
+                archive = next((a for a in args if a.endswith(".tar") or a.endswith(".gz")), None)
+                if not archive:
+                    return "tar: specify archive name with -f"
+                node = navigate_to(current_path)
+                if archive not in node:
+                    return f"tar: {archive}: Cannot open: No such file or directory"
+                return f"[Simulated: extracted {archive}]"
+            elif "t" in flags:
+                archive = next((a for a in args if a.endswith(".tar") or a.endswith(".gz")), None)
+                if not archive:
+                    return "tar: specify archive name with -f"
+                node = navigate_to(current_path)
+                if archive not in node:
+                    return f"tar: {archive}: Cannot open: No such file or directory"
+                return f"[Simulated contents of {archive}]"
+            return "tar: invalid option"
+
+        elif cmd == "zip":
+            if len(args) < 2:
+                return "zip: usage: zip [options] zipfile files..."
+            zipname = args[0]
+            files = args[1:]
+            node = navigate_to(current_path)
+            missing = [f for f in files if f not in node]
+            if missing:
+                return f"zip warning: name not matched: {' '.join(missing)}"
+            node[zipname] = f"[zip archive containing: {', '.join(files)}]"
+            lines = [f"  adding: {f} (deflated 60%)" for f in files]
+            return "\n".join(lines)
+
+        elif cmd == "unzip":
+            if not args:
+                return "unzip: usage: unzip [-opts[modifiers]] file[.zip]"
+            zipname = args[-1]
+            node = navigate_to(current_path)
+            if zipname not in node:
+                return f"unzip: cannot find or open {zipname}"
+            return f"Archive:  {zipname}\n  inflating: [simulated extraction of {zipname}]"
+
+        elif cmd == "awk":
+            if not args:
+                return "Usage: awk 'program' [file ...]"
+            prog = args[0]
+            if len(args) < 2:
+                return f"awk: (reading from stdin is not supported in simulator)"
+            filename = args[-1]
+            node = navigate_to(current_path)
+            if filename not in node:
+                return f"awk: can't open file {filename}: No such file or directory"
+            content = node[filename]
+            if isinstance(content, dict):
+                return f"awk: {filename}: Is a directory"
+            # Simple print simulation
+            if "print $1" in prog:
+                return "\n".join(line.split()[0] for line in content.split("\n") if line.split())
+            elif "print $NF" in prog:
+                return "\n".join(line.split()[-1] for line in content.split("\n") if line.split())
+            elif "print" in prog:
+                return content
+            return f"[awk: '{prog}' applied to {filename}]"
+
+        elif cmd == "sed":
+            if not args:
+                return "sed: no script command!\nUsage: sed [options] 'script' [file]"
+            script = args[0]
+            if len(args) < 2:
+                return "sed: no input file\n(stdin not supported in simulator)"
+            filename = args[-1]
+            node = navigate_to(current_path)
+            if filename not in node:
+                return f"sed: can't read {filename}: No such file or directory"
+            content = node[filename]
+            if isinstance(content, dict):
+                return f"sed: read error on {filename}: Is a directory"
+            # Handle s/old/new/ substitution
+            if script.startswith("s/"):
+                parts = script.split("/")
+                if len(parts) >= 3:
+                    old, new = parts[1], parts[2]
+                    flags = parts[3] if len(parts) > 3 else ""
+                    if "g" in flags:
+                        result = content.replace(old, new)
+                    else:
+                        result = "\n".join(line.replace(old, new, 1) for line in content.split("\n"))
+                    # If -i flag, modify in place
+                    if "-i" in args:
+                        node[filename] = result
+                        return ""
+                    return result
+            elif script.startswith("d"):
+                # Delete lines matching pattern (simplified)
+                return f"[sed: '{script}' applied to {filename}]"
+            return f"[sed: '{script}' applied to {filename}]"
+
+        elif cmd == "printf":
+            if not args:
+                return ""
+            fmt = args[0]
+            values = args[1:]
+            # Simple format substitution
+            result = fmt
+            for v in values:
+                result = result.replace("%s", v, 1).replace("%d", v, 1)
+            result = result.replace("\\n", "\n").replace("\\t", "\t")
+            return result
+
+        elif cmd == "sudo":
+            if not args:
+                return "usage: sudo [-u user] command"
+            subcmd = args[0]
+            if subcmd == "su" or (subcmd == "-" and len(args) > 1):
+                return "[sudo] password for student: \nSorry, try again."
+            # Re-run the subcommand with a note
+            sub_result = execute(" ".join(args))
+            return sub_result
+
+        elif cmd == "su":
+            user = args[0] if args else "root"
+            if user == "root" or user == "-":
+                return "Password: \nsu: Authentication failure"
+            return f"su: user {user} does not exist"
+
+        elif cmd == "who":
+            return f"student  pts/0        {datetime.now().strftime('%Y-%m-%d %H:%M')} (:0)"
+
+        elif cmd == "w":
+            lines = [
+                f" {datetime.now().strftime('%H:%M:%S')} up {random.randint(1,99)}:{random.randint(0,59):02d},  1 user,  load average: 0.10, 0.08, 0.05",
+                "USER     TTY      FROM             LOGIN@   IDLE JCPU   PCPU WHAT",
+                f"student  pts/0    :0               {datetime.now().strftime('%H:%M')}    0.00s  0.05s  0.01s bash"
+            ]
+            return "\n".join(lines)
+
+        elif cmd == "last":
+            lines = [
+                f"student  pts/0        :0               {datetime.now().strftime('%a %b %d %H:%M')}   still logged in",
+                f"student  pts/0        :0               {datetime.now().strftime('%a %b %d')} 09:00 - 17:00  (08:00)",
+                f"reboot   system boot  5.15.0-generic   {datetime.now().strftime('%a %b %d')} 08:59",
+                "",
+                f"wtmp begins {datetime.now().strftime('%a %b %d')} 08:59"
+            ]
+            return "\n".join(lines)
+
+        elif cmd == "lscpu":
+            return (
+                "Architecture:            x86_64\n"
+                "  CPU op-mode(s):        32-bit, 64-bit\n"
+                "  Byte Order:            Little Endian\n"
+                "CPU(s):                  4\n"
+                "  On-line CPU(s) list:   0-3\n"
+                "Vendor ID:               GenuineIntel\n"
+                "  Model name:            Intel(R) Core(TM) i5-8250U CPU @ 1.60GHz\n"
+                "    CPU MHz:             1600.000\n"
+                "    CPU max MHz:         3400.0000\n"
+                "    CPU min MHz:         400.0000\n"
+                "Caches (sum of all):\n"
+                "  L1d:                   128 KiB (4 instances)\n"
+                "  L1i:                   128 KiB (4 instances)\n"
+                "  L2:                    1 MiB (4 instances)\n"
+                "  L3:                    6 MiB (1 instance)"
+            )
+
+        elif cmd == "lsblk":
+            return (
+                "NAME   MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT\n"
+                "sda      8:0    0    50G  0 disk\n"
+                "├─sda1   8:1    0    48G  0 part /\n"
+                "└─sda2   8:2    0     2G  0 part [SWAP]\n"
+                "sdb      8:16   0   100G  0 disk\n"
+                "└─sdb1   8:17   0   100G  0 part /home"
+            )
+
+        elif cmd in ("netstat", "ss"):
+            lines = [
+                "Netid  State      Recv-Q  Send-Q  Local Address:Port    Peer Address:Port",
+                "tcp    LISTEN     0       128     0.0.0.0:22           0.0.0.0:*",
+                "tcp    LISTEN     0       128     0.0.0.0:80           0.0.0.0:*",
+                "tcp    ESTAB      0       0       127.0.0.1:45678      127.0.0.1:5432",
+                "udp    UNCONN     0       0       0.0.0.0:68           0.0.0.0:*",
+            ]
+            return "\n".join(lines)
+
+        elif cmd in ("ifconfig", "ip"):
+            if cmd == "ip" and args and args[0] in ("a", "addr", "address"):
+                pass  # fall through to same output
+            elif cmd == "ip" and args and args[0] not in ("a", "addr", "address", "link", "route", "r"):
+                return f"ip: unknown command '{args[0]}'"
+            return (
+                "eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500\n"
+                "        inet 192.168.1.100  netmask 255.255.255.0  broadcast 192.168.1.255\n"
+                "        inet6 fe80::1  prefixlen 64  scopeid 0x20<link>\n"
+                "        ether 00:11:22:33:44:55  txqueuelen 1000  (Ethernet)\n"
+                "        RX packets 12345  bytes 9876543 (9.4 MiB)\n"
+                "        TX packets 6789   bytes 1234567 (1.1 MiB)\n"
+                "\n"
+                "lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536\n"
+                "        inet 127.0.0.1  netmask 255.0.0.0\n"
+                "        inet6 ::1  prefixlen 128  scopeid 0x10<host>\n"
+                "        loop  txqueuelen 1000  (Local Loopback)"
+            )
+
+        elif cmd == "systemctl":
+            if not args:
+                return "systemctl: missing command"
+            action = args[0]
+            service = args[1] if len(args) > 1 else None
+            if action == "status":
+                if not service:
+                    return "systemctl: missing service name"
+                return (
+                    f"● {service}.service - {service.capitalize()} Service\n"
+                    f"     Loaded: loaded (/lib/systemd/system/{service}.service; enabled)\n"
+                    f"     Active: active (running) since {datetime.now().strftime('%a %Y-%m-%d %H:%M:%S')} UTC; 1h ago\n"
+                    f"    Process: 1024 ExecStart=/usr/sbin/{service}\n"
+                    f"   Main PID: 1024 ({service})\n"
+                    f"      Tasks: 2 (limit: 4915)\n"
+                    f"     Memory: 4.5M"
+                )
+            elif action in ("start", "stop", "restart", "enable", "disable", "reload"):
+                if not service:
+                    return f"systemctl {action}: missing service name"
+                return ""  # success silently
+            elif action == "list-units":
+                return (
+                    "  UNIT                     LOAD   ACTIVE SUB     DESCRIPTION\n"
+                    "  nginx.service            loaded active running A high performance web server\n"
+                    "  sshd.service             loaded active running OpenSSH server daemon\n"
+                    "  cron.service             loaded active running Regular background program processing\n"
+                    "\nLEGEND: LOAD=Reflects whether the unit definition was properly loaded.\n"
+                    "        ACTIVE=The high-level unit activation state."
+                )
+            return f"systemctl: unknown command '{action}'"
+
+        elif cmd in ("apt", "apt-get"):
+            if not args:
+                return f"{cmd}: missing command\nUsage: {cmd} [options] command"
+            action = args[0]
+            packages = args[1:]
+            if action == "update":
+                return (
+                    "Hit:1 http://archive.ubuntu.com/ubuntu focal InRelease\n"
+                    "Get:2 http://archive.ubuntu.com/ubuntu focal-updates InRelease\n"
+                    "Fetched 1,234 kB in 2s (617 kB/s)\n"
+                    "Reading package lists... Done"
+                )
+            elif action in ("install", "reinstall"):
+                if not packages:
+                    return f"{cmd}: {action}: no packages specified"
+                pkg_list = " ".join(packages)
+                return (
+                    f"Reading package lists... Done\n"
+                    f"Building dependency tree... Done\n"
+                    f"The following NEW packages will be installed:\n"
+                    f"  {pkg_list}\n"
+                    f"0 upgraded, {len(packages)} newly installed, 0 to remove and 0 not upgraded.\n"
+                    f"[Simulated: {pkg_list} installed successfully]"
+                )
+            elif action in ("remove", "purge"):
+                if not packages:
+                    return f"{cmd}: {action}: no packages specified"
+                return f"[Simulated: {' '.join(packages)} removed]"
+            elif action in ("upgrade", "full-upgrade", "dist-upgrade"):
+                return "Reading package lists... Done\nCalculating upgrade... Done\n0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded."
+            elif action == "search":
+                q = " ".join(packages)
+                return f"Sorting... Done\nFull-text search... Done\n{q}/focal 1.0-1 amd64\n  Package matching '{q}'"
+            elif action == "show":
+                pkg = packages[0] if packages else "?"
+                return (
+                    f"Package: {pkg}\n"
+                    f"Version: 1.0-1\n"
+                    f"Priority: optional\n"
+                    f"Section: utils\n"
+                    f"Installed-Size: 1024\n"
+                    f"Maintainer: Ubuntu Developers\n"
+                    f"Description: Simulated package '{pkg}'"
+                )
+            return f"{cmd}: invalid operation {action}"
+
+        elif cmd == "git":
+            if not args:
+                return (
+                    "usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]\n"
+                    "           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]\n"
+                    "           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--bare]\n"
+                    "           [--git-dir=<path>] [--work-tree=<path>] [--namespace=<name>]\n"
+                    "           [--super-prefix=<path>] [--config-env=<name>=<envvar>]\n"
+                    "           <command> [<args>]\n"
+                )
+            subcmd = args[0]
+            rest = args[1:]
+            if subcmd == "init":
+                node = navigate_to(current_path)
+                node[".git"] = {"HEAD": "ref: refs/heads/main", "config": "[core]\n\trepositoryformatversion = 0"}
+                return f"Initialized empty Git repository in {get_current_dir()}/.git/"
+            elif subcmd == "status":
+                return (
+                    "On branch main\n\n"
+                    "No commits yet\n\n"
+                    "nothing to commit (create/copy files and use \"git add\" to track)"
+                )
+            elif subcmd == "add":
+                return ""
+            elif subcmd == "commit":
+                msg = "Initial commit"
+                if "-m" in rest:
+                    idx = rest.index("-m")
+                    if idx + 1 < len(rest):
+                        msg = rest[idx + 1].strip("'\"")
+                hash_ = "".join(random.choices("0123456789abcdef", k=7))
+                return f"[main (root-commit) {hash_}] {msg}\n 1 file changed, 0 insertions(+), 0 deletions(-)"
+            elif subcmd == "log":
+                hash_ = "".join(random.choices("0123456789abcdef", k=40))
+                return (
+                    f"commit {hash_}\n"
+                    f"Author: student <student@linux-simulator>\n"
+                    f"Date:   {datetime.now().strftime('%a %b %d %H:%M:%S %Y +0000')}\n\n"
+                    f"    Initial commit"
+                )
+            elif subcmd == "clone":
+                url = rest[0] if rest else "<url>"
+                dirname = url.split("/")[-1].replace(".git", "")
+                node = navigate_to(current_path)
+                node[dirname] = {".git": {}, "README.md": "# " + dirname}
+                return f"Cloning into '{dirname}'...\nremote: Counting objects: 3, done.\nReceiving objects: 100% (3/3), done."
+            elif subcmd in ("pull", "fetch", "push"):
+                return f"[Simulated: git {subcmd}]\nEverything up-to-date."
+            elif subcmd == "branch":
+                if rest:
+                    return ""
+                return "* main"
+            elif subcmd == "checkout":
+                branch = rest[0] if rest else "main"
+                if "-b" in rest:
+                    idx = rest.index("-b")
+                    branch = rest[idx + 1] if idx + 1 < len(rest) else "new-branch"
+                    return f"Switched to a new branch '{branch}'"
+                return f"Switched to branch '{branch}'"
+            elif subcmd == "diff":
+                return "(no changes)"
+            elif subcmd in ("stash", "merge", "rebase", "tag", "remote", "reset"):
+                return f"[Simulated: git {subcmd} {' '.join(rest)}]"
+            return f"git: '{subcmd}' is not a git command. See 'git --help'."
+
+        elif cmd in ("vim", "vi"):
+            if not args:
+                return (
+                    "VIM - Vi IMproved (simulated)\n\n"
+                    "type  :q<Enter>               to exit\n"
+                    "type  :help<Enter>             for help\n"
+                    "(This is a simulator — use nano for editing files)"
+                )
+            filename = args[-1]
+            node = navigate_to(current_path)
+            if filename not in node:
+                node[filename] = ""
+            return f"[vim: '{filename}' opened in simulated mode]\nThis simulator does not support interactive vim.\nUse nano {filename} instead."
+
+        elif cmd in ("less", "more"):
+            if not args:
+                return f"{cmd}: missing file operand"
+            node = navigate_to(current_path)
+            filename = args[-1]
+            if filename not in node:
+                return f"{cmd}: {filename}: No such file or directory"
+            content = node[filename]
+            if isinstance(content, dict):
+                return f"{cmd}: {filename}: Is a directory"
+            return content
+
+        elif cmd == "python3" or cmd == "python":
+            if not args:
+                return (
+                    f"Python 3.10.6 (simulated)\n"
+                    f"Type \"help\", \"copyright\", \"credits\" or \"license\" for more information.\n"
+                    f">>> (interactive mode not supported in simulator)"
+                )
+            if args[0] == "-c" and len(args) > 1:
+                code = args[1]
+                # Very limited eval for simple print statements
+                if code.startswith("print(") and code.endswith(")"):
+                    inner = code[6:-1].strip("'\"")
+                    return inner
+                return f"[Simulated: python3 -c '{code}']"
+            filename = args[0]
+            node = navigate_to(current_path)
+            if filename not in node:
+                return f"python3: can't open file '{filename}': [Errno 2] No such file or directory"
+            content = node[filename]
+            if isinstance(content, dict):
+                return f"python3: '{filename}': Is a directory"
+            return f"[Simulated: running {filename}]"
+
+        elif cmd == "crontab":
+            if "-l" in args:
+                return "# no crontab for student"
+            elif "-e" in args:
+                return "[Simulated: crontab editor opened]\nUse 'crontab -l' to list jobs."
+            elif "-r" in args:
+                return ""
+            return "usage: crontab [-u user] [-l | -r | -e] [-i]"
+
+        elif cmd in ("nslookup", "dig"):
+            if not args:
+                return f"{cmd}: missing hostname"
+            host = [a for a in args if not a.startswith("-")]
+            if not host:
+                return f"{cmd}: missing hostname"
+            host = host[0]
+            ip = f"{random.randint(1,254)}.{random.randint(1,254)}.{random.randint(1,254)}.{random.randint(1,254)}"
+            if cmd == "nslookup":
+                return f"Server:\t\t8.8.8.8\nAddress:\t8.8.8.8#53\n\nNon-authoritative answer:\nName:\t{host}\nAddress: {ip}"
+            else:
+                return (
+                    f"; <<>> DiG 9.16.1 <<>> {host}\n"
+                    f";; QUESTION SECTION:\n;{host}.\t\t\tIN\tA\n\n"
+                    f";; ANSWER SECTION:\n{host}.\t\t300\tIN\tA\t{ip}\n\n"
+                    f";; Query time: {random.randint(1,50)} msec\n"
+                    f";; SERVER: 8.8.8.8#53(8.8.8.8)"
+                )
+
+        elif cmd == "lsof":
+            lines = [
+                "COMMAND   PID     USER   FD   TYPE DEVICE SIZE/OFF NODE NAME",
+                f"systemd     1     root  cwd    DIR    8,1     4096    2 /",
+                f"bash      245  student  cwd    DIR    8,1     4096 1234 {get_current_dir()}",
+                f"python3   892  student  cwd    DIR    8,1     4096 1234 {get_current_dir()}",
+                f"nginx    1024 www-data    3u  IPv4  12345      0t0  TCP *:80 (LISTEN)",
+                f"sshd     1337     root    3u  IPv4  12346      0t0  TCP *:22 (LISTEN)",
+            ]
+            if args:
+                # filter by name if given
+                needle = args[-1]
+                lines = [lines[0]] + [l for l in lines[1:] if needle in l]
+            return "\n".join(lines)
+
+        elif cmd in ("jobs", "bg", "fg"):
+            return "[No active jobs]"
+
+        elif cmd == "traceroute":
+            if not args:
+                return "traceroute: missing host operand"
+            host = [a for a in args if not a.startswith("-")]
+            if not host:
+                return "traceroute: missing host operand"
+            host = host[0]
+            lines = [f"traceroute to {host}, 30 hops max, 60 byte packets"]
+            for i in range(1, 6):
+                ms1 = round(random.uniform(1, 50), 3)
+                ms2 = round(random.uniform(1, 50), 3)
+                ms3 = round(random.uniform(1, 50), 3)
+                ip = f"{10}.{random.randint(0,255)}.{random.randint(0,255)}.{i}"
+                lines.append(f" {i}  {ip}  {ms1} ms  {ms2} ms  {ms3} ms")
+            lines.append(f" 6  {host}  {round(random.uniform(10,100),3)} ms")
+            return "\n".join(lines)
 
         elif cmd == "exit":
             return "logout\nConnection to linux-simulator closed."
@@ -815,10 +1402,18 @@ Change: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}.000000000 +0000
                 "Navigation:    pwd  ls  cd  find  which  type  dirname  basename\n"
                 "Files:         touch  mkdir  rm  cp  mv  cat  ln  stat  chmod  chown\n"
                 "Text:          echo  head  tail  wc  grep  sort  uniq  cut  tr  rev  tac\n"
-                "Editors:       nano\n"
+                "               awk  sed  printf  less  more\n"
+                "Editors:       nano  vim  vi\n"
+                "Archive:       tar  zip  unzip\n"
                 "Binary/Data:   strings  xxd  base64  file  diff  md5sum  sha256sum\n"
                 "System:        whoami  hostname  id  uname  date  uptime  ps  kill\n"
-                "               df  free  cal  env  export  alias  sleep  seq\n"
+                "               df  free  du  cal  env  export  alias  sleep  seq\n"
+                "               top  htop  lscpu  lsblk  lsof  jobs  bg  fg  sudo  su\n"
+                "               systemctl  crontab  who  w  last\n"
+                "Network:       ping  curl  wget  ssh  netstat  ss  ifconfig  ip\n"
+                "               nslookup  dig  traceroute\n"
+                "Package Mgmt:  apt  apt-get\n"
+                "Dev:           git  python3  python\n"
                 "Utilities:     history  man  clear  help  exit  tee  readlink  yes\n"
                 "Fun:           neofetch  cowsay"
             )
