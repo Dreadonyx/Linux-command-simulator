@@ -322,7 +322,14 @@ def execute(command):
                      "lscpu", "lsblk", "netstat", "ss", "ifconfig", "ip", "systemctl",
                      "apt", "apt-get", "git", "vim", "vi", "less", "more", "python3",
                      "python", "crontab", "nslookup", "dig", "lsof", "jobs", "bg", "fg",
-                     "traceroute"]
+                     "traceroute", "watch", "nohup", "vmstat", "iostat", "dmesg",
+                     "journalctl", "service", "at", "screen", "tmux", "passwd", "useradd",
+                     "userdel", "usermod", "groups", "chgrp", "nc", "netcat", "rsync",
+                     "scp", "whois", "host", "mtr", "arp", "ufw", "iptables", "nmcli",
+                     "iwconfig", "lspci", "lsusb", "lshw", "fdisk", "blkid", "mount",
+                     "umount", "make", "gcc", "g++", "pip", "pip3", "node", "nodejs",
+                     "npm", "strace", "ltrace", "ldd", "nm", "readelf", "objdump", "gdb",
+                     "bc", "expr", "xargs", "column", "paste", "nl", "fmt"]
             if args[0] in known:
                 return f"/usr/bin/{args[0]}"
             return ""
@@ -809,7 +816,14 @@ Change: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}.000000000 +0000
                      "lscpu", "lsblk", "netstat", "ss", "ifconfig", "ip", "systemctl",
                      "apt", "apt-get", "git", "vim", "vi", "less", "more", "python3",
                      "python", "crontab", "nslookup", "dig", "lsof", "jobs", "bg", "fg",
-                     "traceroute"]
+                     "traceroute", "watch", "nohup", "vmstat", "iostat", "dmesg",
+                     "journalctl", "service", "at", "screen", "tmux", "passwd", "useradd",
+                     "userdel", "usermod", "groups", "chgrp", "nc", "netcat", "rsync",
+                     "scp", "whois", "host", "mtr", "arp", "ufw", "iptables", "nmcli",
+                     "iwconfig", "lspci", "lsusb", "lshw", "fdisk", "blkid", "mount",
+                     "umount", "make", "gcc", "g++", "pip", "pip3", "node", "nodejs",
+                     "npm", "strace", "ltrace", "ldd", "nm", "readelf", "objdump", "gdb",
+                     "bc", "expr", "xargs", "column", "paste", "nl", "fmt"]
             if cmd_name in known:
                 return f"{cmd_name} is /usr/bin/{cmd_name}"
             return f"bash: type: {cmd_name}: not found"
@@ -1389,6 +1403,698 @@ Change: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}.000000000 +0000
             lines.append(f" 6  {host}  {round(random.uniform(10,100),3)} ms")
             return "\n".join(lines)
 
+        # ==================== ADDITIONAL COMMANDS ====================
+
+        elif cmd == "watch":
+            if not args:
+                return "watch: missing command\nUsage: watch [options] command"
+            interval = 2
+            if "-n" in args:
+                idx = args.index("-n")
+                if idx + 1 < len(args):
+                    try: interval = float(args[idx + 1])
+                    except: pass
+            subcmd = " ".join(a for a in args if not a.startswith("-") and a != str(interval))
+            return f"[Simulated: watch -n {interval} {subcmd}]\n(Repeating every {interval}s — not interactive in simulator)\n\n" + execute(subcmd)
+
+        elif cmd == "nohup":
+            if not args:
+                return "nohup: missing operand\nUsage: nohup COMMAND [ARG]..."
+            return f"nohup: appending output to 'nohup.out'\n[Simulated: {' '.join(args)} running immune to hangups]"
+
+        elif cmd == "vmstat":
+            return (
+                "procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----\n"
+                " r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st\n"
+                " 1  0      0 4096000 102400 2048000    0    0    12    8  234  456  3  1 96  0  0"
+            )
+
+        elif cmd == "iostat":
+            return (
+                f"Linux 5.15.0-generic   {datetime.now().strftime('%m/%d/%Y')}   _x86_64_   (4 CPU)\n\n"
+                "avg-cpu:  %user   %nice %system %iowait  %steal   %idle\n"
+                "           2.34    0.00    0.78    0.12    0.00   96.76\n\n"
+                "Device             tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn\n"
+                "sda               5.42        82.34        34.12     123456      51234\n"
+                "sdb               0.12         1.23         0.45       1234        456"
+            )
+
+        elif cmd == "dmesg":
+            lines = [
+                f"[    0.000000] Linux version 5.15.0-generic",
+                f"[    0.000000] Command line: BOOT_IMAGE=/boot/vmlinuz root=/dev/sda1",
+                f"[    0.100000] BIOS-provided physical RAM map:",
+                f"[    1.234567] PCI: Using configuration type 1 for base access",
+                f"[    2.345678] NET: Registered PF_INET protocol family",
+                f"[    3.456789] eth0: renamed from veth1234",
+                f"[    5.678901] EXT4-fs (sda1): mounted filesystem",
+                f"[   10.123456] systemd[1]: Reached target Basic System.",
+            ]
+            if "-T" in args:
+                lines = [f"[{datetime.now().strftime('%a %b %d %H:%M:%S %Y')}] " + l.split("] ", 1)[1] for l in lines]
+            return "\n".join(lines)
+
+        elif cmd == "journalctl":
+            if "-u" in args:
+                idx = args.index("-u")
+                unit = args[idx + 1] if idx + 1 < len(args) else "unknown"
+                return (
+                    f"-- Journal begins at {datetime.now().strftime('%a %Y-%m-%d %H:%M:%S')} --\n"
+                    f"{datetime.now().strftime('%b %d %H:%M:%S')} linux-simulator {unit}[1024]: Starting {unit}...\n"
+                    f"{datetime.now().strftime('%b %d %H:%M:%S')} linux-simulator {unit}[1024]: {unit} started successfully.\n"
+                    f"{datetime.now().strftime('%b %d %H:%M:%S')} linux-simulator systemd[1]: Started {unit}.service."
+                )
+            if "-f" in args:
+                return f"-- Journal follows --\n{datetime.now().strftime('%b %d %H:%M:%S')} linux-simulator kernel: [Simulated live logs]"
+            return (
+                f"-- Logs begin at {datetime.now().strftime('%a %Y-%m-%d %H:%M:%S')} --\n"
+                f"{datetime.now().strftime('%b %d %H:%M:%S')} linux-simulator systemd[1]: Started Session 1 of user student.\n"
+                f"{datetime.now().strftime('%b %d %H:%M:%S')} linux-simulator sshd[1337]: Server listening on 0.0.0.0 port 22.\n"
+                f"{datetime.now().strftime('%b %d %H:%M:%S')} linux-simulator kernel: eth0: Link is Up - 1Gbps/Full"
+            )
+
+        elif cmd == "service":
+            if not args:
+                return "Usage: service <service> <command>"
+            if len(args) < 2:
+                return f"Usage: service {args[0]} <command>"
+            svc, action = args[0], args[1]
+            if action == "status":
+                state = random.choice(["running", "stopped"])
+                return f" * {svc} is {state}"
+            elif action in ("start", "stop", "restart", "reload"):
+                return f" * {action.capitalize()}ing {svc}..."
+            return f"service: invalid action '{action}'"
+
+        elif cmd == "at":
+            if not args:
+                return "Garbled time\nUsage: at [-f file] TIME"
+            time_spec = " ".join(args)
+            return f"warning: commands will be executed using /bin/sh\njob 1 at {datetime.now().strftime('%a %b %d %H:%M:%S %Y')}\n[Simulated: job scheduled for {time_spec}]"
+
+        elif cmd == "screen":
+            if not args:
+                return "[Simulated: new screen session created]\nPress Ctrl+a d to detach (not interactive in simulator)"
+            if args[0] == "-ls":
+                return "No Sockets found in /run/screen/S-student."
+            if args[0] in ("-d", "-r"):
+                return "No screen session found."
+            return f"[Simulated: screen {' '.join(args)}]"
+
+        elif cmd == "tmux":
+            if not args:
+                return "[Simulated: new tmux session]\n(Interactive mode not supported in simulator)"
+            subcmd = args[0]
+            if subcmd == "ls" or subcmd == "list-sessions":
+                return "no server running on /tmp/tmux-1000/default"
+            if subcmd in ("new", "new-session"):
+                return "[Simulated: new tmux session created]"
+            if subcmd in ("attach", "a"):
+                return "no sessions"
+            return f"[Simulated: tmux {' '.join(args)}]"
+
+        elif cmd == "passwd":
+            if args and args[0] != "student":
+                return f"passwd: user '{args[0]}' does not exist"
+            return "Changing password for student.\nCurrent password: \nNew password: \nRetype new password: \n[Simulated: password unchanged in simulator]"
+
+        elif cmd == "useradd":
+            if not args:
+                return "Usage: useradd [options] LOGIN"
+            user = [a for a in args if not a.startswith("-")]
+            if not user:
+                return "useradd: no username specified"
+            return f"[Simulated: user '{user[0]}' created]"
+
+        elif cmd == "userdel":
+            if not args:
+                return "Usage: userdel [options] LOGIN"
+            return f"[Simulated: user '{args[-1]}' deleted]"
+
+        elif cmd == "usermod":
+            if not args:
+                return "Usage: usermod [options] LOGIN"
+            return f"[Simulated: user '{args[-1]}' modified]"
+
+        elif cmd == "groups":
+            user = args[0] if args else "student"
+            return f"{user} : {user} sudo adm dialout cdrom plugdev lpadmin"
+
+        elif cmd == "chgrp":
+            if len(args) < 2:
+                return "chgrp: missing operand\nUsage: chgrp GROUP FILE"
+            return ""
+
+        elif cmd in ("nc", "netcat"):
+            if not args:
+                return "usage: nc [-options] hostname port\n       nc -l [-options] [hostname] port"
+            if "-l" in args:
+                port = [a for a in args if a.isdigit()]
+                p = port[0] if port else "?"
+                return f"[Simulated: listening on port {p}]\n(Not interactive in simulator)"
+            hosts = [a for a in args if not a.startswith("-") and not a.isdigit()]
+            ports = [a for a in args if a.isdigit()]
+            if hosts and ports:
+                return f"[Simulated: connected to {hosts[0]}:{ports[0]}]\n(Not interactive in simulator)"
+            return "nc: missing hostname or port"
+
+        elif cmd == "rsync":
+            if len(args) < 2:
+                return "rsync: missing destination\nUsage: rsync [options] SRC DEST"
+            src, dest = args[-2], args[-1]
+            return (
+                f"sending incremental file list\n"
+                f"{src}\n\n"
+                f"sent 1,234 bytes  received 35 bytes  1,846.00 bytes/sec\n"
+                f"total size is 1,200  speedup is 0.95"
+            )
+
+        elif cmd == "scp":
+            if len(args) < 2:
+                return "usage: scp [-r] source destination"
+            return f"[Simulated: scp {' '.join(args)}]\n(No real transfer in simulator)"
+
+        elif cmd == "whois":
+            if not args:
+                return "whois: missing domain"
+            domain = args[0]
+            return (
+                f"Domain Name: {domain.upper()}\n"
+                f"Registry Domain ID: SIMULATED\n"
+                f"Registrar: Example Registrar, Inc.\n"
+                f"Creation Date: 2000-01-01T00:00:00Z\n"
+                f"Updated Date: {datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')}\n"
+                f"Expiry Date: 2030-01-01T00:00:00Z\n"
+                f"Name Server: ns1.example.com\n"
+                f"Name Server: ns2.example.com"
+            )
+
+        elif cmd == "host":
+            if not args:
+                return "Usage: host [-t type] name [server]"
+            target = [a for a in args if not a.startswith("-")]
+            if not target:
+                return "host: missing name"
+            target = target[0]
+            ip = f"{random.randint(1,254)}.{random.randint(1,254)}.{random.randint(1,254)}.{random.randint(1,254)}"
+            return f"{target} has address {ip}\n{target} mail is handled by 10 mail.{target}."
+
+        elif cmd == "mtr":
+            if not args:
+                return "mtr: missing host operand"
+            host = [a for a in args if not a.startswith("-")]
+            if not host:
+                return "mtr: missing host operand"
+            host = host[0]
+            lines = [
+                f"Start: {datetime.now().strftime('%Y-%m-%dT%H:%M:%S%z')}",
+                f"HOST: linux-simulator              Loss%   Snt   Last   Avg  Best  Wrst StDev",
+            ]
+            for i in range(1, 6):
+                ip = f"10.0.{i}.1"
+                loss = 0
+                avg = round(random.uniform(1, 50), 1)
+                lines.append(f"  {i}.|-- {ip:<24} {loss:.1f}%    10   {avg}  {avg}  {avg-1}  {avg+2}   0.5")
+            lines.append(f"  6.|-- {host:<24} 0.0%    10   {round(random.uniform(10,100),1)}  ...")
+            return "\n".join(lines)
+
+        elif cmd == "arp":
+            if "-n" in args or not args:
+                return (
+                    "Address                  HWtype  HWaddress           Flags Mask            Iface\n"
+                    "192.168.1.1              ether   aa:bb:cc:dd:ee:ff   C                     eth0\n"
+                    "192.168.1.2              ether   11:22:33:44:55:66   C                     eth0"
+                )
+            return (
+                "linux-simulator.local (192.168.1.100) at <incomplete> on eth0\n"
+                "_gateway (192.168.1.1) at aa:bb:cc:dd:ee:ff [ether] on eth0"
+            )
+
+        elif cmd == "ufw":
+            if not args:
+                return "Usage: ufw COMMAND\nCommands: enable|disable|status|allow|deny|delete|reset"
+            action = args[0]
+            if action == "status":
+                return "Status: inactive"
+            elif action == "enable":
+                return "Firewall is active and enabled on system startup"
+            elif action == "disable":
+                return "Firewall stopped and disabled on system startup"
+            elif action in ("allow", "deny"):
+                rule = " ".join(args[1:]) if len(args) > 1 else "?"
+                return f"Rule {'added' if action == 'allow' else 'added (deny)'}: {rule}"
+            return f"ufw: unknown command '{action}'"
+
+        elif cmd == "iptables":
+            if not args or "-L" in args:
+                return (
+                    "Chain INPUT (policy ACCEPT)\n"
+                    "target     prot opt source               destination\n"
+                    "ACCEPT     all  --  anywhere             anywhere    state RELATED,ESTABLISHED\n\n"
+                    "Chain FORWARD (policy DROP)\n"
+                    "target     prot opt source               destination\n\n"
+                    "Chain OUTPUT (policy ACCEPT)\n"
+                    "target     prot opt source               destination"
+                )
+            return f"[Simulated: iptables {' '.join(args)}]"
+
+        elif cmd == "nmcli":
+            if not args:
+                return "Usage: nmcli [OPTIONS] OBJECT { COMMAND | help }"
+            obj = args[0]
+            if obj in ("d", "device"):
+                return (
+                    "DEVICE  TYPE      STATE      CONNECTION\n"
+                    "eth0    ethernet  connected  Wired connection 1\n"
+                    "lo      loopback  unmanaged  --"
+                )
+            elif obj in ("c", "connection"):
+                return (
+                    "NAME                UUID                                  TYPE      DEVICE\n"
+                    "Wired connection 1  12345678-1234-1234-1234-123456789abc  ethernet  eth0"
+                )
+            elif obj in ("g", "general"):
+                return "STATE      CONNECTIVITY  WIFI-HW  WIFI     WWAN-HW  WWAN\nconnected  full          enabled  enabled  enabled  enabled"
+            return f"[Simulated: nmcli {' '.join(args)}]"
+
+        elif cmd == "iwconfig":
+            return (
+                "wlan0     IEEE 802.11  ESSID:\"MyNetwork\"\n"
+                "          Mode:Managed  Frequency:2.437 GHz  Access Point: AA:BB:CC:DD:EE:FF\n"
+                "          Bit Rate=54 Mb/s   Tx-Power=20 dBm\n"
+                "          Link Quality=70/70  Signal level=-40 dBm  Noise level=-95 dBm\n"
+                "          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0\n\n"
+                "lo        no wireless extensions."
+            )
+
+        elif cmd == "lspci":
+            return (
+                "00:00.0 Host bridge: Intel Corporation 8th Gen Core Processor Host Bridge/DRAM (rev 07)\n"
+                "00:02.0 VGA compatible controller: Intel Corporation UHD Graphics 620\n"
+                "00:14.0 USB controller: Intel Corporation Sunrise Point-LP USB 3.0 xHCI Controller\n"
+                "00:1f.2 Memory controller: Intel Corporation Sunrise Point-LP PMC\n"
+                "01:00.0 Network controller: Intel Corporation Wireless 8265 / 8275\n"
+                "02:00.0 Ethernet controller: Realtek Semiconductor RTL8111/8168/8411 Gigabit Ethernet"
+            )
+
+        elif cmd == "lsusb":
+            return (
+                "Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub\n"
+                "Bus 001 Device 003: ID 8087:0a2b Intel Corp. Bluetooth wireless interface\n"
+                "Bus 001 Device 002: ID 04f2:b5ce Chicony Electronics Co., Ltd Integrated Camera\n"
+                "Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub"
+            )
+
+        elif cmd == "lshw":
+            return (
+                "linux-simulator\n"
+                "    description: Computer\n"
+                "    product: Simulated Machine\n"
+                "  *-core\n"
+                "       description: Motherboard\n"
+                "     *-cpu\n"
+                "          description: CPU\n"
+                "          product: Intel(R) Core(TM) i5-8250U CPU @ 1.60GHz\n"
+                "          capacity: 3400MHz\n"
+                "     *-memory\n"
+                "          description: System Memory\n"
+                "          size: 8GiB\n"
+                "     *-display\n"
+                "          description: VGA compatible controller\n"
+                "          product: UHD Graphics 620\n"
+                "     *-network\n"
+                "          description: Ethernet interface\n"
+                "          logical name: eth0\n"
+                "          capacity: 1Gbit/s"
+            )
+
+        elif cmd == "fdisk":
+            if "-l" in args:
+                return (
+                    "Disk /dev/sda: 50 GiB, 53687091200 bytes, 104857600 sectors\n"
+                    "Units: sectors of 1 * 512 = 512 bytes\n\n"
+                    "Device     Boot    Start       End   Sectors  Size Id Type\n"
+                    "/dev/sda1  *        2048  98566143  98564096   47G 83 Linux\n"
+                    "/dev/sda2       98566144 104857599   6291456    3G 82 Linux swap\n\n"
+                    "Disk /dev/sdb: 100 GiB, 107374182400 bytes, 209715200 sectors\n"
+                    "Device     Boot Start       End   Sectors  Size Id Type\n"
+                    "/dev/sdb1        2048 209715199 209713152  100G 83 Linux"
+                )
+            return "fdisk: requires root privileges or use -l to list"
+
+        elif cmd == "blkid":
+            return (
+                '/dev/sda1: UUID="a1b2c3d4-e5f6-7890-abcd-ef1234567890" TYPE="ext4" PARTUUID="12345678-01"\n'
+                '/dev/sda2: UUID="b2c3d4e5-f6a7-8901-bcde-f01234567891" TYPE="swap" PARTUUID="12345678-02"\n'
+                '/dev/sdb1: UUID="c3d4e5f6-a7b8-9012-cdef-012345678912" TYPE="ext4" PARTUUID="87654321-01"'
+            )
+
+        elif cmd == "mount":
+            if len(args) >= 2:
+                return f"[Simulated: mounted {args[0]} at {args[1]}]"
+            return (
+                "sysfs on /sys type sysfs (rw,nosuid,nodev,noexec,relatime)\n"
+                "proc on /proc type proc (rw,nosuid,nodev,noexec,relatime)\n"
+                "/dev/sda1 on / type ext4 (rw,relatime,errors=remount-ro)\n"
+                "/dev/sdb1 on /home type ext4 (rw,relatime)\n"
+                "tmpfs on /tmp type tmpfs (rw,nosuid,nodev)"
+            )
+
+        elif cmd == "umount":
+            if not args:
+                return "umount: missing operand"
+            return f"[Simulated: unmounted {args[-1]}]"
+
+        elif cmd == "make":
+            target = args[0] if args else "all"
+            if target == "clean":
+                return "rm -f *.o *.out\n[Simulated: cleaned build artifacts]"
+            return (
+                f"gcc -Wall -o {target} {target}.c\n"
+                f"[Simulated: built target '{target}' successfully]"
+            )
+
+        elif cmd in ("gcc", "g++"):
+            if not args:
+                return f"{cmd}: no input files"
+            src = [a for a in args if not a.startswith("-")]
+            out = None
+            if "-o" in args:
+                idx = args.index("-o")
+                if idx + 1 < len(args):
+                    out = args[idx + 1]
+            if not src:
+                return f"{cmd}: no input files"
+            outname = out or "a.out"
+            node = navigate_to(current_path)
+            if src[0] not in node:
+                return f"{cmd}: {src[0]}: No such file or directory"
+            node[outname] = f"[compiled binary from {src[0]}]"
+            return f"[Simulated: compiled {src[0]} -> {outname}]"
+
+        elif cmd in ("pip", "pip3"):
+            if not args:
+                return f"{cmd}: missing command\nUsage: {cmd} <command> [options]"
+            action = args[0]
+            packages = args[1:]
+            if action == "install":
+                if not packages:
+                    return f"{cmd}: install requires at least 1 argument"
+                pkg = packages[0].split("==")[0]
+                ver = packages[0].split("==")[1] if "==" in packages[0] else "latest"
+                return (
+                    f"Collecting {pkg}\n"
+                    f"  Downloading {pkg}-{ver if ver != 'latest' else '1.0.0'}.tar.gz\n"
+                    f"Installing collected packages: {pkg}\n"
+                    f"Successfully installed {pkg}"
+                )
+            elif action in ("uninstall", "remove"):
+                pkg = packages[0] if packages else "?"
+                return f"Found existing installation: {pkg}\nSuccessfully uninstalled {pkg}"
+            elif action == "list":
+                return (
+                    "Package           Version\n"
+                    "----------------- -------\n"
+                    "pip               23.0.1\n"
+                    "setuptools        67.6.0\n"
+                    "requests          2.28.2\n"
+                    "numpy             1.24.2"
+                )
+            elif action in ("show", "info"):
+                pkg = packages[0] if packages else "?"
+                return f"Name: {pkg}\nVersion: 1.0.0\nSummary: Simulated package\nLocation: /usr/lib/python3/dist-packages"
+            elif action == "freeze":
+                return "requests==2.28.2\nnumpy==1.24.2\nsetuptools==67.6.0"
+            return f"{cmd}: unknown command '{action}'"
+
+        elif cmd in ("node", "nodejs"):
+            if not args:
+                return "Welcome to Node.js v18.12.1 (simulated)\n(interactive mode not supported in simulator)"
+            if args[0] == "-e":
+                code = args[1] if len(args) > 1 else ""
+                if "console.log" in code:
+                    inner = code.split("console.log(")[1].rstrip(")").strip("'\"")
+                    return inner
+                return f"[Simulated: node -e '{code}']"
+            filename = args[0]
+            node_fs = navigate_to(current_path)
+            if filename not in node_fs:
+                return f"node: can't open file '{filename}': [Errno 2] No such file or directory"
+            return f"[Simulated: running {filename} with Node.js]"
+
+        elif cmd == "npm":
+            if not args:
+                return "Usage: npm <command>\nwhere <command> is one of: install, run, start, test, init, ..."
+            action = args[0]
+            if action == "install":
+                pkg = args[1] if len(args) > 1 else None
+                if pkg:
+                    return f"added 1 package in 1s\n\n1 package is looking for funding\n  run `npm fund` for details"
+                return "added 234 packages in 5s\n\n30 packages are looking for funding\n  run `npm fund` for details"
+            elif action in ("start", "test", "run"):
+                script = args[1] if action == "run" and len(args) > 1 else action
+                return f"> simulate@1.0.0 {script}\n> node index.js\n\n[Simulated: npm {action}]"
+            elif action == "init":
+                return "This utility will walk you through creating a package.json file.\n[Simulated: package.json created]"
+            elif action == "list" or action == "ls":
+                return "simulate@1.0.0\n└── express@4.18.2"
+            return f"npm: unknown command '{action}'"
+
+        elif cmd == "strace":
+            if not args:
+                return "strace: must have PROG [ARGS] or -p PID"
+            if "-p" in args:
+                idx = args.index("-p")
+                pid = args[idx + 1] if idx + 1 < len(args) else "?"
+                return (
+                    f"strace: attach: ptrace(PTRACE_SEIZE, {pid}): [Simulated]\n"
+                    f"read(0, \"\", 8192)                       = 0\n"
+                    f"write(1, \"output\", 6)                   = 6\n"
+                    f"+++ exited with 0 +++"
+                )
+            prog = args[0]
+            return (
+                f"execve(\"{prog}\", [\"{prog}\"], envp) = 0\n"
+                f"brk(NULL)                               = 0x55a1234\n"
+                f"openat(AT_FDCWD, \"/etc/ld.so.cache\", O_RDONLY|O_CLOEXEC) = 3\n"
+                f"read(3, \"\\177ELF\", 4)                   = 4\n"
+                f"close(3)                                = 0\n"
+                f"+++ exited with 0 +++"
+            )
+
+        elif cmd == "ltrace":
+            if not args:
+                return "ltrace: missing program to trace"
+            prog = args[0]
+            return (
+                f"__libc_start_main(0x400526, 1, 0x7fff..., ...) = 0\n"
+                f"printf(\"Hello, World!\\n\")                  = 14\n"
+                f"+++ exited (status 0) +++"
+            )
+
+        elif cmd == "ldd":
+            if not args:
+                return "ldd: missing file operand"
+            filename = args[-1]
+            return (
+                f"\tlinux-vdso.so.1 (0x00007ffcabcde000)\n"
+                f"\tlibc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f1234560000)\n"
+                f"\t/lib64/ld-linux-x86-64.so.2 (0x00007f1234780000)"
+            )
+
+        elif cmd == "nm":
+            if not args:
+                return "nm: missing file operand"
+            filename = args[-1]
+            node = navigate_to(current_path)
+            if filename not in node:
+                return f"nm: {filename}: No such file or directory"
+            return (
+                f"0000000000000000 T main\n"
+                f"                 U printf\n"
+                f"0000000000000010 T helper_func\n"
+                f"0000000000601040 D global_var"
+            )
+
+        elif cmd == "readelf":
+            if not args or (len(args) == 1 and args[0].startswith("-")):
+                return "readelf: warning: Nothing to do.\nUsage: readelf <option(s)> elf-file(s)"
+            filename = [a for a in args if not a.startswith("-")]
+            if not filename:
+                return "readelf: no input file"
+            filename = filename[0]
+            if "-h" in args or "--file-header" in args:
+                return (
+                    "ELF Header:\n"
+                    "  Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00\n"
+                    "  Class:                             ELF64\n"
+                    "  Data:                              2's complement, little endian\n"
+                    "  Version:                           1 (current)\n"
+                    "  OS/ABI:                            UNIX - System V\n"
+                    "  Type:                              EXEC (Executable file)\n"
+                    "  Machine:                           Advanced Micro Devices X86-64\n"
+                    "  Entry point address:               0x401050"
+                )
+            if "-S" in args or "--sections" in args:
+                return (
+                    "There are 29 section headers, starting at offset 0x3818:\n\n"
+                    "Section Headers:\n"
+                    "  [Nr] Name              Type             Address           Offset\n"
+                    "  [ 0]                   NULL             0000000000000000  00000000\n"
+                    "  [ 1] .text             PROGBITS         0000000000401050  00001050\n"
+                    "  [ 2] .data             PROGBITS         0000000000403000  00003000\n"
+                    "  [ 3] .bss              NOBITS           0000000000403020  00003020"
+                )
+            return f"[Simulated: readelf {' '.join(args)}]"
+
+        elif cmd == "objdump":
+            if not args or (len(args) == 1 and args[0].startswith("-")):
+                return "objdump: no input file specified"
+            filename = [a for a in args if not a.startswith("-")]
+            if not filename:
+                return "objdump: no input file"
+            filename = filename[0]
+            if "-d" in args or "--disassemble" in args:
+                return (
+                    f"{filename}:     file format elf64-x86-64\n\n"
+                    "Disassembly of section .text:\n\n"
+                    "0000000000401050 <main>:\n"
+                    "  401050:\t55                   \tpush   %rbp\n"
+                    "  401051:\t48 89 e5             \tmov    %rsp,%rbp\n"
+                    "  401054:\tb8 00 00 00 00       \tmov    $0x0,%eax\n"
+                    "  401059:\t5d                   \tpop    %rbp\n"
+                    "  40105a:\tc3                   \tret"
+                )
+            return f"[Simulated: objdump {' '.join(args)}]"
+
+        elif cmd == "gdb":
+            if not args:
+                return (
+                    "GNU gdb (Ubuntu 12.1) 12.1 (simulated)\n"
+                    "Type \"help\" for help.\n"
+                    "(gdb) (interactive mode not supported in simulator)"
+                )
+            return (
+                f"GNU gdb (Ubuntu 12.1) 12.1 (simulated)\n"
+                f"Reading symbols from {args[0]}...\n"
+                f"(gdb) (interactive mode not supported in simulator)"
+            )
+
+        elif cmd == "bc":
+            if not args:
+                return "bc 1.07.1 (simulated)\nCopyright 1991-1994 Free Software Foundation\n(interactive mode not supported — use: echo '2+2' | bc)"
+            expr = " ".join(args)
+            try:
+                result = eval(expr.replace("^", "**"))
+                return str(result)
+            except:
+                return f"(standard_in) 1: syntax error"
+
+        elif cmd == "expr":
+            if not args:
+                return "expr: missing operand"
+            try:
+                expr = " ".join(args)
+                # Handle basic arithmetic and string ops
+                if "+" in args or "-" in args or "*" in args or "/" in args or "%" in args:
+                    nums = []
+                    op = None
+                    for a in args:
+                        if a in ("+", "-", "*", "/", "%"):
+                            op = a
+                        else:
+                            try: nums.append(int(a))
+                            except: return "expr: non-numeric argument"
+                    if op and len(nums) >= 2:
+                        ops = {"+": nums[0]+nums[1], "-": nums[0]-nums[1],
+                               "*": nums[0]*nums[1], "/": nums[0]//nums[1] if nums[1] != 0 else "division by zero",
+                               "%": nums[0]%nums[1] if nums[1] != 0 else "division by zero"}
+                        return str(ops[op])
+                if ":" in args:
+                    return "0"
+                return " ".join(args)
+            except:
+                return "expr: syntax error"
+
+        elif cmd == "xargs":
+            if not args:
+                return "[xargs: reads from stdin — not supported in simulator]\nUsage: xargs [options] [command]"
+            return f"[Simulated: xargs {' '.join(args)}]"
+
+        elif cmd == "column":
+            if not args:
+                return "column: missing file operand"
+            node = navigate_to(current_path)
+            filename = [a for a in args if not a.startswith("-")]
+            if not filename:
+                return "column: missing file operand"
+            filename = filename[0]
+            if filename not in node:
+                return f"column: cannot open {filename}: No such file or directory"
+            content = node[filename]
+            if isinstance(content, dict):
+                return "column: Is a directory"
+            return content  # simplified — just return as-is
+
+        elif cmd == "paste":
+            if len(args) < 2:
+                return "paste: missing file operand"
+            node = navigate_to(current_path)
+            files = [a for a in args if not a.startswith("-")]
+            contents = []
+            for f in files:
+                if f not in node:
+                    return f"paste: {f}: No such file or directory"
+                if isinstance(node[f], dict):
+                    return f"paste: {f}: Is a directory"
+                contents.append(node[f].split("\n"))
+            result = []
+            for row in zip(*contents):
+                result.append("\t".join(row))
+            return "\n".join(result)
+
+        elif cmd == "nl":
+            if not args:
+                return "nl: missing file operand"
+            node = navigate_to(current_path)
+            filename = [a for a in args if not a.startswith("-")]
+            if not filename:
+                return "nl: missing file operand"
+            filename = filename[0]
+            if filename not in node:
+                return f"nl: {filename}: No such file or directory"
+            content = node[filename]
+            if isinstance(content, dict):
+                return "nl: Is a directory"
+            lines = content.split("\n")
+            return "\n".join(f"{i+1:6}\t{line}" for i, line in enumerate(lines))
+
+        elif cmd == "fmt":
+            if not args:
+                return "fmt: missing file operand"
+            node = navigate_to(current_path)
+            filename = [a for a in args if not a.startswith("-")]
+            if not filename:
+                return "fmt: missing file operand"
+            filename = filename[0]
+            if filename not in node:
+                return f"fmt: {filename}: No such file or directory"
+            content = node[filename]
+            if isinstance(content, dict):
+                return "fmt: Is a directory"
+            # Simple word wrap at 75 chars
+            words = content.split()
+            lines, line = [], ""
+            for w in words:
+                if len(line) + len(w) + 1 > 75:
+                    lines.append(line)
+                    line = w
+                else:
+                    line = (line + " " + w).strip()
+            if line:
+                lines.append(line)
+            return "\n".join(lines)
+
         elif cmd == "exit":
             return "logout\nConnection to linux-simulator closed."
 
@@ -1402,19 +2108,24 @@ Change: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}.000000000 +0000
                 "Navigation:    pwd  ls  cd  find  which  type  dirname  basename\n"
                 "Files:         touch  mkdir  rm  cp  mv  cat  ln  stat  chmod  chown\n"
                 "Text:          echo  head  tail  wc  grep  sort  uniq  cut  tr  rev  tac\n"
-                "               awk  sed  printf  less  more\n"
+                "               awk  sed  printf  less  more  column  paste  nl  fmt\n"
                 "Editors:       nano  vim  vi\n"
                 "Archive:       tar  zip  unzip\n"
                 "Binary/Data:   strings  xxd  base64  file  diff  md5sum  sha256sum\n"
+                "               nm  readelf  objdump  ldd  strace  ltrace  gdb\n"
                 "System:        whoami  hostname  id  uname  date  uptime  ps  kill\n"
                 "               df  free  du  cal  env  export  alias  sleep  seq\n"
-                "               top  htop  lscpu  lsblk  lsof  jobs  bg  fg  sudo  su\n"
-                "               systemctl  crontab  who  w  last\n"
+                "               top  htop  vmstat  iostat  dmesg  journalctl  service\n"
+                "               lscpu  lsblk  lsof  jobs  bg  fg  sudo  su  watch\n"
+                "               systemctl  crontab  who  w  last  nohup  at  screen  tmux\n"
+                "               lspci  lsusb  lshw  fdisk  blkid  mount  umount  bc  expr\n"
+                "User Mgmt:     passwd  useradd  userdel  usermod  groups  chgrp\n"
                 "Network:       ping  curl  wget  ssh  netstat  ss  ifconfig  ip\n"
-                "               nslookup  dig  traceroute\n"
-                "Package Mgmt:  apt  apt-get\n"
-                "Dev:           git  python3  python\n"
-                "Utilities:     history  man  clear  help  exit  tee  readlink  yes\n"
+                "               nslookup  dig  traceroute  nc  netcat  rsync  scp\n"
+                "               whois  host  mtr  arp  ufw  iptables  nmcli  iwconfig\n"
+                "Package Mgmt:  apt  apt-get  pip  pip3  npm\n"
+                "Dev:           git  python3  python  node  nodejs  make  gcc  g++\n"
+                "Utilities:     history  man  clear  help  exit  tee  readlink  xargs  yes\n"
                 "Fun:           neofetch  cowsay"
             )
 
