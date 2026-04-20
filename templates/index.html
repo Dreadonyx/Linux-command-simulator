@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linux Command Simulator</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="terminal-header">
+        <div class="terminal-buttons">
+            <span class="terminal-btn close"></span>
+            <span class="terminal-btn minimize"></span>
+            <span class="terminal-btn maximize"></span>
+        </div>
+        <div class="terminal-title">▶ LINUX COMMAND SIMULATOR ◀</div>
+    </div>
+    
+    <div class="terminal">
+        <pre class="banner">
+██╗     ██╗███╗   ██╗██╗   ██╗██╗  ██╗     ██████╗███╗   ███╗██████╗ 
+██║     ██║████╗  ██║██║   ██║╚██╗██╔╝    ██╔════╝████╗ ████║██╔══██╗
+██║     ██║██╔██╗ ██║██║   ██║ ╚███╔╝     ██║     ██╔████╔██║██║  ██║
+██║     ██║██║╚██╗██║██║   ██║ ██╔██╗     ██║     ██║╚██╔╝██║██║  ██║
+███████╗██║██║ ╚████║╚██████╔╝██╔╝ ██╗    ╚██████╗██║ ╚═╝ ██║██████╔╝
+╚══════╝╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝  ╚═╝     ╚═════╝╚═╝     ╚═╝╚═════╝ 
+        </pre>
+        <div class="welcome-msg">
+            [!] Welcome to Linux Command Simulator v1.0<br>
+            [!] Type 'help' to see available commands<br>
+            [!] Happy Hacking!
+        </div>
+        <div id="output"></div>
+    </div>
+    
+    <div class="status-bar">
+        <span>◉ SYSTEM ACTIVE</span>
+        <span id="datetime"></span>
+        <span>◉ CONNECTED</span>
+    </div>
+    
+    <script src="/static/script.js"></script>
+</body>
+</html>
