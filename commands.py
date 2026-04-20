@@ -50,6 +50,12 @@ def execute(command):
     cmd = parts[0]
     args = parts[1:]
 
+    # Expand aliases
+    if cmd in aliases:
+        expanded = aliases[cmd].split()
+        cmd = expanded[0]
+        args = expanded[1:] + args
+
     try:
         if cmd == "pwd":
             return get_current_dir()
@@ -59,7 +65,9 @@ def execute(command):
             show_all = "-a" in args or "-la" in args or "-al" in args
             node = navigate_to(current_path)
             items = list(node.keys())
-            if show_all:
+            if not show_all:
+                items = [i for i in items if not i.startswith(".")]
+            else:
                 items = [".", ".."] + items
             if show_long:
                 lines = []
@@ -106,7 +114,8 @@ def execute(command):
                 return "touch: missing file operand"
             node = navigate_to(current_path)
             for name in args:
-                node[name] = ""
+                if name not in node:
+                    node[name] = ""
             return ""
 
         elif cmd == "cat":
@@ -1985,10 +1994,19 @@ Change: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}.000000000 +0000
                 return "bc 1.07.1 (simulated)\nCopyright 1991-1994 Free Software Foundation\n(interactive mode not supported — use: echo '2+2' | bc)"
             expr = " ".join(args)
             try:
-                result = eval(expr.replace("^", "**"))
+                import ast
+                expr = expr.replace("^", "**")
+                tree = ast.parse(expr, mode='eval')
+                for node in ast.walk(tree):
+                    if not isinstance(node, (ast.Expression, ast.BinOp, ast.UnaryOp,
+                                             ast.Constant, ast.Add, ast.Sub, ast.Mult,
+                                             ast.Div, ast.Mod, ast.Pow, ast.FloorDiv,
+                                             ast.USub, ast.UAdd)):
+                        return "(standard_in) 1: syntax error"
+                result = eval(compile(tree, '<bc>', 'eval'))
                 return str(result)
             except:
-                return f"(standard_in) 1: syntax error"
+                return "(standard_in) 1: syntax error"
 
         elif cmd == "expr":
             if not args:
